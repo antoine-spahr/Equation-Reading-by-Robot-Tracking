@@ -25,7 +25,7 @@ def main(video_path, output_path):
     # initialize equation <- '' and output-video <- []
 
     # while frame < video_length or '=' found:
-    #       track robot position
+    #       position ; bbox <- track robot position
     #       append position to list
     #       check if bbox more than 90% overlap with any digit/operator
     #           append character to equation string
@@ -42,8 +42,18 @@ if __name__ == '__main__':
     main()
 
 
-###############################################################################
-
+################################################################################
+"""
+TASK
+    |--- Fran : Tracker
+    |           return position and bbox of arrow in one frame.
+    |--- Mat : Training MLP-digit and 1-NN operator
+    |           save model in pickle
+    |--- Ant : Training KMeans
+    |           return centers
+    |          generate data
+"""
+################################################################################
 
 import matplotlib.pyplot as plt
 import skimage
@@ -85,7 +95,7 @@ plt.show()
 labels = skimage.measure.label(mask, background=False)
 props = skimage.measure.regionprops(labels, intensity_image=img)
 
-y0, x0, y1, x1 = props[0].bbox
+y0, x0, y1, x1 = props[6].bbox
 elem_im = img1[y0:y1+1, x0:x1+1, :]
 elem_im_gray = skimage.color.rgb2gray(elem_im)
 # remake the mask of object

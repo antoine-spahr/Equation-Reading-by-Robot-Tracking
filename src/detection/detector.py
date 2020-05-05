@@ -38,18 +38,21 @@ class Detector:
     def classify_color(self):
         """
         Kmeans closest center
+        --> evaluation
         """
         raise(NotImplementedError)
 
     def classify_digit(self):
         """
         MLP on fourier descriptors
+        --> evaluation
         """
         raise(NotImplementedError)
 
     def classify_operator(self):
         """
         1-NN on fourier descriptors
+        --> evaluation
         """
         raise(NotImplementedError)
 
