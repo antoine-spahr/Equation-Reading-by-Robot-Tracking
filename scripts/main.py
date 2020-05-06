@@ -9,7 +9,7 @@ from src.detection import detector
 
 @click.commande()
 @click.argument('video_path', type=click.Path(exists=True))
-@click.option('output_path', type=click.Path(exists=False), default='')
+@click.option('--output_path', type=click.Path(exists=False), default='')
 def main(video_path, output_path):
     """
     Read the equation showed on the video at `video_path` by tracking the robot.
@@ -40,6 +40,12 @@ def main(video_path, output_path):
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
+
 
 
 ################################################################################
@@ -90,30 +96,39 @@ fig, ax = plt.subplots(1,1,figsize=(9,9))
 ax.imshow(mask, cmap='gray')
 plt.show()
 
-
+import skimage.io
 #%% get bbox objects and masks
 labels = skimage.measure.label(mask, background=False)
 props = skimage.measure.regionprops(labels, intensity_image=img)
 
-y0, x0, y1, x1 = props[6].bbox
-elem_im = img1[y0:y1+1, x0:x1+1, :]
-elem_im_gray = skimage.color.rgb2gray(elem_im)
-# remake the mask of object
-elem_mask = np.where(elem_im_gray < skimage.filters.threshold_otsu(skimage.color.rgb2gray(elem_im_gray)), True, False)
+fig, axs = plt.subplots(1, len(props), figsize=(len(props)*3, 3))
+out_path = '../data/Train_objects/'
 
-# reajust bbox and image
-coords = np.argwhere(elem_mask)
-y_min, x_min = coords.min(axis=0)
-y_max, x_max = coords.max(axis=0)
+for i, (ax, prop) in enumerate(zip(axs, props)):
+    y0, x0, y1, x1 = prop.bbox
+    elem_im = img1[y0:y1+1, x0:x1+1, :]
+    elem_im_gray = skimage.color.rgb2gray(elem_im)
+    # remake the mask of object
+    elem_mask = np.where(elem_im_gray < skimage.filters.threshold_otsu(skimage.color.rgb2gray(elem_im_gray)), True, False)
 
-y1 = y0 + y_max+1
-x1 = x0 + x_max+1
-y0 += y_min-1
-x0 += x_min-1
+    # reajust bbox and image
+    coords = np.argwhere(elem_mask)
+    y_min, x_min = coords.min(axis=0)
+    y_max, x_max = coords.max(axis=0)
 
-elem_im = elem_im[y_min-1:y_max+2, x_min-1:x_max+2, :]
-elem_mask = elem_mask[y_min-1:y_max+2, x_min-1:x_max+2]
+    y1 = y0 + y_max+1
+    x1 = x0 + x_max+1
+    y0 += y_min-1
+    x0 += x_min-1
 
-plt.imshow(elem_im * np.stack(3*[elem_mask], axis=2))
+    elem_im = elem_im[y_min-1:y_max+2, x_min-1:x_max+2, :]
+    elem_mask = elem_mask[y_min-1:y_max+2, x_min-1:x_max+2]
+
+    skimage.io.imsave(out_path+f'img_{i+1}.png', elem_im)
+    skimage.io.imsave(out_path+f'mask_{i+1}.png', skimage.img_as_ubyte(elem_mask))
+
+    ax.imshow(elem_im)# * np.stack(3*[elem_mask], axis=2))
+
+plt.show()
 
 # %%
