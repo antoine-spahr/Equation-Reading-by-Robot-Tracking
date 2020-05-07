@@ -8,9 +8,11 @@ import skimage.io
 import numpy as np
 from sklearn.cluster import KMeans
 
+END = "\x1b[0m"
+
 def color_code(rgb):
     """
-
+    Provide the ANSI color code for terminal printing.
     """
     r05 = int(rgb[0] / 256 * 5)
     g05 = int(rgb[1] / 256 * 5)
@@ -19,7 +21,6 @@ def color_code(rgb):
     c_idx = 16 + 36 * r05 + 6 * g05 + b05
 
     return f"\x1b[48;5;255m" + f"\x1b[38;5;{c_idx}m"
-END = "\x1b[0m"
 
 @click.command()
 @click.argument('data_folder', type=click.Path(exists=True))

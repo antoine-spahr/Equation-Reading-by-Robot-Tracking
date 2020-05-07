@@ -5,6 +5,9 @@ import skimage.morphology
 import skimage.segmentation
 import numpy as np
 
+import json
+import pickle
+
 from src.detection.EquationElement import EquationElement
 
 class Detector:
@@ -16,6 +19,9 @@ class Detector:
         self.element_list = []
 
         # load the models
+        # KMeans
+        with open(color_model_path, 'r') as f:
+            self.color_clusters = json.load(f)
 
 
     def analyse_frame(self):
@@ -52,7 +58,7 @@ class Detector:
 
     def extarct_equation_element(self, mask):
         """
-
+        Extract the equation elements from the mask.
         """
         # labellise mask and generate the properties
         labels = skimage.measure.label(mask, background=False)
@@ -86,10 +92,15 @@ class Detector:
 
     def classify_color(self):
         """
-        Kmeans closest center
-        --> evaluation
+        Classify the type of each equation element as the nearest neighbor of the KMeans centers.
         """
-        raise(NotImplementedError)
+        for elem in self.element_list:
+            # element color = mean over pixel of the mask
+            color = np.mean(elem.image.reshape(-1,3)[elem.mask.reshape(-1)], axis=0)
+            # type is the one of closest center
+            names, centers = list(self.color_clusters.keys()), np.array(list(self.color_clusters.values()))
+            idx = np.linalg.norm(centers - color, ord=2, axis=1).argmin()
+            elem.type = names[idx]
 
     def classify_digit(self):
         """
