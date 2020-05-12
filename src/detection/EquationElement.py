@@ -7,7 +7,7 @@ class EquationElement:
     """
     Define an equation element of the video (digit or operator)
     """
-    def __init__(self, image, mask, bbox=(0,0,0,0)):
+    def __init__(self, mask, image=None, bbox=(0,0,0,0)):
         # object bbox within video frame
         self.x0, self.y0 = bbox[0], bbox[1]
         self.x1, self.y1 = bbox[2], bbox[3]
@@ -39,19 +39,6 @@ class EquationElement:
         feat = f_descriptors[:N]
 
         return feat
-
-    # def _get_linked_contour(self, im):
-    #     """
-    #     Assemble the multiple contours of a mask into a single one.
-    #     The contours are linked by their extremities.
-    #     """
-    #     contour = skimage.measure.find_contours(im, level=False, fully_connected='high')
-    #     contour_all = [contour[0]]
-    #     # link the contours
-    #     for contour_i, contour_t in zip(contour[:-1], contour[1:]):
-    #         link = self._get_contour_link(contour_i[0], contour_t[0])
-    #         contour_all += [link, contour_t]
-    #     return np.concatenate(contour_all, axis=0)
 
     def _get_linked_contour(self, m):
         """
@@ -107,7 +94,10 @@ class EquationElement:
         c1_corr = np.concatenate([c1[idx_1:-1,:], c1[:idx_1+1,:]], axis=0)
         c2_corr = np.concatenate([c2[idx_2:-1,:], c2[:idx_2+1,:]], axis=0)
         # link them together
-        merged_c = np.concatenate([c1_corr, link, c2_corr, link[::-1,:], np.expand_dims(c1_corr[0], axis=0)], axis=0)
+        if link.ndim < 2:
+            merged_c = np.concatenate([c1_corr, c2_corr, start_point], axis=0)
+        else:
+            merged_c = np.concatenate([c1_corr, link, c2_corr, link[::-1,:], start_point], axis=0)
         return merged_c
 
     def _get_contour_link(self, c_i, c_t):
