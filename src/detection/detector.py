@@ -23,15 +23,20 @@ class Detector:
         with open(color_model_path, 'r') as f:
             self.color_clusters = json.load(f)
 
+        # Operators K-NN
+
+
+        # Digit MLP
+
 
     def analyse_frame(self):
         """
 
         """
         raise(NotImplementedError)
-        # get mask
-        # get element
-        # classify element if they are op or digit
+        # mask = self.get_mask()
+        # self.extract_equation_element(mask)
+        # self.classify_color()                      classify element if they are op or digit
         # classify digit
         # classify op
 
@@ -120,4 +125,5 @@ class Detector:
         """
 
         """
+
         raise(NotImplementedError)
