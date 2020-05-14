@@ -116,7 +116,7 @@ class Detector:
 
     def classify_operator(self):
         """
-        1-NN on fourier descriptors
+        5-NN on fourier descriptors
         --> evaluation
         """
         raise(NotImplementedError)
@@ -125,5 +125,4 @@ class Detector:
         """
 
         """
-
         raise(NotImplementedError)

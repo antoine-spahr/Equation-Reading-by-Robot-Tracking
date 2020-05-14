@@ -94,6 +94,7 @@ class EquationElement:
         c1_corr = np.concatenate([c1[idx_1:-1,:], c1[:idx_1+1,:]], axis=0)
         c2_corr = np.concatenate([c2[idx_2:-1,:], c2[:idx_2+1,:]], axis=0)
         # link them together
+        start_point = np.expand_dims(c1_corr[0], axis=0)
         if link.ndim < 2:
             merged_c = np.concatenate([c1_corr, c2_corr, start_point], axis=0)
         else:

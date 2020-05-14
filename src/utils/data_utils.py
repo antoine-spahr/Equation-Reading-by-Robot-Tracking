@@ -2,7 +2,37 @@ import gzip
 import numpy as np
 import skimage.morphology
 import skimage.filters
+import skimage.io
+import glob
 
+from src.detection.EquationElement import EquationElement
+
+def get_operators_train_data(data_path, Nfeat=4, rotate=True):
+    """
+    Provide the operators train features (The first Nfeat Fourier descriptor).
+    If rotate is True, each image is rotated to increase the diversity of images.
+    """
+    # Read images and labels
+    mask, label = [], []
+    for mask_fn in glob.glob(data_path+'mask/*.png'):
+        mask.append(skimage.img_as_bool(skimage.io.imread(mask_fn)))
+        label.append(mask_fn.split('/')[-1].split('_')[-1][:-4])
+
+    label_correspondance = {i: name for i, name in zip(range(len(label)), label)}
+
+    # Rotate images
+    if rotate:
+        mask_rot = []
+        for m in mask:
+            mask_rot += [skimage.transform.rotate(m, ang, order=0, resize=True) for ang in np.arange(0,360,1)]
+        mask = mask_rot
+        # expand labels
+        labels = np.repeat(np.array(range(len(label))), 360)
+
+    # get Fourier Fetaures as numpy array
+    feat = np.stack([EquationElement(m, None).get_Fourier_descr(Nfeat) for m in mask], axis=0)
+
+    return feat, labels, label_correspondance
 
 def extract_data(filename, image_shape, image_number):
     """
@@ -31,7 +61,7 @@ def binarize_MNIST(im):
 
 def extract_labels(filename, image_number):
     """
-    Extract MNIST lables as a Numpy array from the byte file.
+    Extract MNIST labels as a Numpy array from the byte file.
     """
     with gzip.open(filename) as bytestream:
         bytestream.read(8)
