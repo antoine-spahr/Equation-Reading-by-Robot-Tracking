@@ -7,7 +7,7 @@ class EquationElement:
     """
     Define an equation element of the video (digit or operator)
     """
-    def __init__(self, mask, image=None, bbox=(0,0,0,0)):
+    def __init__(self, mask, image, bbox=(0,0,0,0)):
         # object bbox within video frame
         self.x0, self.y0 = bbox[0], bbox[1]
         self.x1, self.y1 = bbox[2], bbox[3]

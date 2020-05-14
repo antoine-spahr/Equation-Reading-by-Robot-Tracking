@@ -6,6 +6,7 @@ sys.path.append('../')
 import imageio
 
 from src.detection import detector
+# from src.tracking import tracker
 
 @click.commande()
 @click.argument('video_path', type=click.Path(exists=True))
@@ -23,6 +24,8 @@ def main(video_path, output_path):
     fram1 = video.get_data(0)
 
     # initialize equation <- '' and output-video <- []
+    equation = ''
+    output_video = [] # list of frame
 
     # while frame < video_length or '=' found:
     #       position ; bbox <- track robot position
