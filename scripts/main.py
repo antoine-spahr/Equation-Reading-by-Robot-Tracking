@@ -5,8 +5,9 @@ sys.path.append('../')
 
 import imageio
 
-from src.detection import detector
-# from src.tracking import tracker
+from src.detection.detector import Detector
+from src.tracking.tracker import Tracker
+from src.utils.output_utils import draw_output_frame, save_video
 
 @click.commande()
 @click.argument('video_path', type=click.Path(exists=True))
@@ -23,9 +24,12 @@ def main(video_path, output_path):
     # Read 1st frame and read the environment (classify operator and digits)
     fram1 = video.get_data(0)
 
+    detector = Detector(fram1, None, '../models/Operators_model.pickle', '../models/KMeanse_centers.json')
+    eq_element_list = detector.analyse_frame()
+
     # initialize equation <- '' and output-video <- []
     equation = ''
-    output_video = [] # list of frame
+    output_frames = [] # list of frame
 
     # while frame < video_length or '=' found:
     #       position ; bbox <- track robot position
@@ -43,11 +47,6 @@ def main(video_path, output_path):
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
 
 ################################################################################
 """

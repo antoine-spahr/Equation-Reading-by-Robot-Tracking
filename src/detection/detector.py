@@ -19,28 +19,36 @@ class Detector:
         self.element_list = []
 
         # load the models
-        # KMeans
+        # Color KMeans
         with open(color_model_path, 'r') as f:
             self.color_clusters = json.load(f)
 
         # Operators K-NN
-
+        with open(operator_model_path, 'rb') as f:
+            model = pickle.load(f)
+            self.operator_classifier = model['model']
+            self.operator_labels_name = model['labels_name']
 
         # Digit MLP
+        # TO DO : Load MLP for digit recognition
 
 
     def analyse_frame(self):
         """
-
+        Analyse the frame to extract equation element and identify them.
         """
-        raise(NotImplementedError)
-        # mask = self.get_mask()
-        # self.extract_equation_element(mask)
-        # self.classify_color()                      classify element if they are op or digit
-        # classify digit
-        # classify op
+        mask = self.get_mask()
+        self.extract_equation_element(mask)
+        # classify element if they are op or digit
+        self.classify_colors()
+        # keep only digit and operators elements (not arrow)
+        #self.element_list = [elem for elem in self.element_list if elem.type in ['operator', 'digit']]
+        # Classify digit element values
+        # self.classify_digits()
+        # Classify operator element values
+        self.classify_operators()
 
-        # return a list of Equation Element
+        return self.element_list
 
     def get_mask(self):
         """
@@ -61,7 +69,7 @@ class Detector:
 
         return mask
 
-    def extarct_equation_element(self, mask):
+    def extract_equation_element(self, mask):
         """
         Extract the equation elements from the mask.
         """
@@ -93,9 +101,9 @@ class Detector:
             elem_mask = elem_mask[y_min-1:y_max+2, x_min-1:x_max+2]
 
             # mask EquationElements
-            self.element_list.append(EquationElement((x0, y0, x1, y1), elem_im, elem_mask))
+            self.element_list.append(EquationElement(elem_mask, elem_im, (x0, y0, x1, y1)))
 
-    def classify_color(self):
+    def classify_colors(self):
         """
         Classify the type of each equation element as the nearest neighbor of the KMeans centers.
         """
@@ -107,22 +115,24 @@ class Detector:
             idx = np.linalg.norm(centers - color, ord=2, axis=1).argmin()
             elem.type = names[idx]
 
-    def classify_digit(self):
+    def classify_digits(self):
         """
         MLP on fourier descriptors
         --> evaluation
         """
         raise(NotImplementedError)
 
-    def classify_operator(self):
+    def classify_operators(self):
         """
-        5-NN on fourier descriptors
-        --> evaluation
+        5-NN on fourier descriptors for each element categorized as operators.
         """
-        raise(NotImplementedError)
-
-    def draw_frame(self):
-        """
-
-        """
-        raise(NotImplementedError)
+        char_table = {'plus': '+', 'minus':'-', 'mult':'*', 'div':'/', 'eq':'='}
+        for elem in self.element_list:
+            if elem.type == 'operator':
+                # get fourier descriptors
+                feature = elem.get_Fourier_descr(5)
+                # predict
+                pred = self.operator_classifier.predict(feature.reshape(1, -1))
+                # assign label name
+                op_name = self.operator_labels_name[pred[0]]
+                elem.value = char_table[op_name]
