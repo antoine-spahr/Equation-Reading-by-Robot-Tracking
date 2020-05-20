@@ -13,12 +13,12 @@ def draw_output_frame(frame, trajectory, equation_str, eq_elem_list=None):
     xpixels = frame.shape[1]
     ypixels = frame.shape[0] + 48
     dpi = 72
-    scalefactor = 1
-    xinch = xpixels * scalefactor / dpi
-    yinch = ypixels * scalefactor / dpi
+    xinch = xpixels / dpi
+    yinch = ypixels / dpi
 
     fig, ax = plt.subplots(1, 1, figsize=(xinch,yinch))
     canvas = matplotlib.backends.backend_agg.FigureCanvas(fig)
+
     fig.set_facecolor('black')
     # plot frame
     ax.imshow(frame, aspect='equal')
@@ -38,7 +38,7 @@ def draw_output_frame(frame, trajectory, equation_str, eq_elem_list=None):
             ax.add_patch(matplotlib.patches.Rectangle((elem.x0-o, elem.y0-o),
                                                 elem.x1-elem.x0+2*o, elem.y1-elem.y0+2*o,
                                                 fill=False, ec=color, lw=2, alpha=0.5))
-            ax.annotate(elem.value, (elem.x0-o, elem.y0-o), fontsize=12, fontweight='bold', color='darkgray',
+            ax.annotate(elem.value, (elem.x0-o, elem.y0-o), fontsize=10, fontweight='bold', color='darkgray',
                         ha='left', va='bottom', xytext=(3,4), textcoords='offset points',
                         bbox=dict(fc=color, lw=0, alpha=0.5))
 
@@ -60,7 +60,7 @@ def save_video(filename, frame_list, fps):
     """
     Save the list of frame as a video.
     """
-    writer = imageio.get_writer(filename, fps=fps)
+    writer = imageio.get_writer(filename, fps=fps, macro_block_size=16)
     for frame in frame_list:
         writer.append_data(frame)
     writer.close()

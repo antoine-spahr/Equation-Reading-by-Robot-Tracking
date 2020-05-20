@@ -119,15 +119,32 @@ class Detector:
 
     def classify_digits(self):
         """
-        MLP on fourier descriptors
-        --> evaluation
+        Classify digits as a majority prediction over 25 random rotation + predict
+        of the image.
         """
         for elem in self.element_list:
             if elem.type == 'digit':
-                # get image as MNIST-like
-                img_mnist = self.img_as_MNIST(elem.image, elem.mask)
+                # get 30 rotated samples
+                rotated_input = []
+                for _ in range(50):
+                    # rotate image
+                    alpha = np.random.randint(0,360)
+                    img = skimage.transform.rotate(elem.image, alpha, order=1, resize=True)
+                    mask = skimage.transform.rotate(elem.mask, alpha, order=1, resize=True)
+                    # crop to content
+                    pos = np.argwhere(mask > 0)
+                    xmin, xmax = max(1, pos[:,1].min()), min(pos[:,1].max(), img.shape[1]-2)
+                    ymin, ymax = max(1, pos[:,0].min()), min(pos[:,0].max(), img.shape[0]-2)
+                    img = img[ymin-1:ymax+2, xmin-1:xmax+2, :]
+                    mask = mask[ymin-1:ymax+2, xmin-1:xmax+2]
+                    # convert in MNIST-like
+                    rotated_input.append(self.img_as_MNIST(img, mask))
+
                 # predict
-                digit_pred = self.digit_classifier.predict(img_mnist.reshape(1, 28*28))
+                rotated_input = np.stack(rotated_input, axis=0)
+                pred_list = self.digit_classifier.predict(rotated_input.reshape(-1,28*28))
+                # classification as majority voting
+                digit_pred = np.bincount(pred_list).argmax()
                 # assign label name
                 elem.value = str(digit_pred.item())
 
@@ -139,8 +156,8 @@ class Detector:
         # put image in grayscale
         img = skimage.color.rgb2gray(img)
         # resize max_axis to 28
-        img = self._resize_max(img, 28)
-        mask = self._resize_max(mask, 28)
+        img = self._resize_max(img, 23)
+        mask = self._resize_max(mask, 23)
         # pad to 28,28
         h, w = img.shape
         pad_h = (int(np.ceil((28-h)/2)), int(np.floor((28-h)/2)))
@@ -153,7 +170,7 @@ class Detector:
 
         # contrast stretch of images --> saturate upper 1% of pixel
         img_masked = skimage.exposure.rescale_intensity(img_masked,
-                                            in_range=(0, np.percentile(img_masked, 99)),
+                                            in_range=(0, np.percentile(img_masked, 100)),
                                             out_range=(0,255))
 
         return img_masked
