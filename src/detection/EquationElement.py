@@ -140,7 +140,7 @@ class EquationElement:
             overlap_area = (x1_min - x0_max) * (y1_min - y0_max)
             bbox_area = (self.x1 - self.x0) * (self.y1 - self.y0)
             # check if overlap is large enough
-            if overlap_area / bbox_area > frac:
+            if overlap_area / bbox_area >= frac:
                 is_overlapping = True
 
         return is_overlapping

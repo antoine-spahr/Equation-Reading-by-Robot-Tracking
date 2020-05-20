@@ -36,7 +36,7 @@ class Tracker:
 
         return mask
 
-    def track(frame):
+    def track(self, frame):
         """
 
         """
@@ -45,7 +45,7 @@ class Tracker:
         props = skimage.measure.regionprops(label)
 
         arrow = max(props, key=lambda prop: prop.area)
-
-        self.position.append(arrow.centroid)
-
-        self.bbox = arrow.bbox
+        yc, xc = arrow.centroid
+        self.position_list.append((xc, yc))
+        y0, x0, y1, x1 = arrow.bbox
+        self.bbox = (x0, y0, x1, y1)

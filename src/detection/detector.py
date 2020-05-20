@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import skimage
+import skimage.color
+import skimage.transform
 import skimage.filters
 import skimage.morphology
 import skimage.segmentation
@@ -12,7 +14,7 @@ from src.detection.EquationElement import EquationElement
 
 class Detector:
     """
-
+    Object to detect and classify equation elmement on a frame.
     """
     def __init__(self, frame, digit_model_path, operator_model_path, color_model_path):
         self.frame = frame
@@ -30,8 +32,8 @@ class Detector:
             self.operator_labels_name = model['labels_name']
 
         # Digit MLP
-        # TO DO : Load MLP for digit recognition
-
+        with open(digit_model_path, 'rb') as f:
+            self.digit_classifier = pickle.load(f)
 
     def analyse_frame(self):
         """
@@ -42,9 +44,9 @@ class Detector:
         # classify element if they are op or digit
         self.classify_colors()
         # keep only digit and operators elements (not arrow)
-        #self.element_list = [elem for elem in self.element_list if elem.type in ['operator', 'digit']]
+        self.element_list = [elem for elem in self.element_list if elem.type in ['operator', 'digit']]
         # Classify digit element values
-        # self.classify_digits()
+        self.classify_digits()
         # Classify operator element values
         self.classify_operators()
 
@@ -120,7 +122,58 @@ class Detector:
         MLP on fourier descriptors
         --> evaluation
         """
-        raise(NotImplementedError)
+        for elem in self.element_list:
+            if elem.type == 'digit':
+                # get image as MNIST-like
+                img_mnist = self.img_as_MNIST(elem.image, elem.mask)
+                # predict
+                digit_pred = self.digit_classifier.predict(img_mnist.reshape(1, 28*28))
+                # assign label name
+                elem.value = str(digit_pred.item())
+
+    def img_as_MNIST(self, img, mask):
+        """
+        Transform the digit image so that it looks like a MNIST image in term of
+        range ang shape.
+        """
+        # put image in grayscale
+        img = skimage.color.rgb2gray(img)
+        # resize max_axis to 28
+        img = self._resize_max(img, 28)
+        mask = self._resize_max(mask, 28)
+        # pad to 28,28
+        h, w = img.shape
+        pad_h = (int(np.ceil((28-h)/2)), int(np.floor((28-h)/2)))
+        pad_w = (int(np.ceil((28-w)/2)), int(np.floor((28-w)/2)))
+        img = skimage.util.pad(img, (pad_h, pad_w), constant_values=0)
+        mask = skimage.util.pad(mask, (pad_h, pad_w), constant_values=0)
+
+        # inverse colorspace and mask image
+        img_masked = (255 - skimage.img_as_ubyte(img)) * skimage.img_as_bool(mask)
+
+        # contrast stretch of images --> saturate upper 1% of pixel
+        img_masked = skimage.exposure.rescale_intensity(img_masked,
+                                            in_range=(0, np.percentile(img_masked, 99)),
+                                            out_range=(0,255))
+
+        return img_masked
+
+    def _resize_max(self, img, max_len):
+        """
+        Resize the passed image so that it's major axis is max_len.
+        """
+        # take first dims
+        s = img.shape
+        if s[0] != s[1]:
+            max_dim, min_dim = np.argmax(s), np.argmin(s)
+        else:
+            max_dim, min_dim = 0, 1
+        aspect_ratio = s[max_dim]/s[min_dim]
+        new_s = list(s)
+        new_s[max_dim], new_s[min_dim] = max_len, int(max_len/aspect_ratio)
+        img = skimage.transform.resize(img, new_s)
+
+        return img
 
     def classify_operators(self):
         """
