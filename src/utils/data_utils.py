@@ -70,10 +70,11 @@ def extract_labels(filename, image_number):
     return labels
 
 def get_MNIST(data_path, digits=[0,1,2,3,4,5,6,7,8,9], image_shape=(28,28),
-              train_size=60000, test_size=10000, binary=False):
+              train_size=60000, test_size=10000, binary=False, add_rotation=0):
     """
     Get the MNIST dataset for the required digits from the provided data folder
-    path. Binarize the image if required.
+    path. Binarize the image if required. Add x rotated version of each image to
+    the sets.
     """
     assert all([d in list(range(10)) for d in digits]), 'Digit must be a list of valid digit (0,1,2,3,4,5,6,7,8,9).'
 
@@ -93,5 +94,18 @@ def get_MNIST(data_path, digits=[0,1,2,3,4,5,6,7,8,9], image_shape=(28,28),
     if binary:
         train_images = np.stack([binarize_MNIST(im) for im in train_images], axis=0)
         test_images = np.stack([binarize_MNIST(im) for im in test_images], axis=0)
+
+    # add rotated version of images
+    if add_rotation > 0:
+        train_images_rot = [train_images]
+        test_images_rot = [test_images]
+        for _ in range(add_rotation):
+            train_images_rot.append(np.stack([skimage.transform.rotate(im, np.random.randint(0,360), order=1) for im in train_images], axis=0))
+            test_images_rot.append(np.stack([skimage.transform.rotate(im, np.random.randint(0,360), order=1) for im in test_images], axis=0))
+
+        train_images = np.concatenate(train_images_rot, axis=0)
+        train_labels = np.concatenate([train_labels]*(add_rotation+1), axis=0)
+        test_images = np.concatenate(test_images_rot, axis=0)
+        test_labels = np.concatenate([test_labels]*(add_rotation+1), axis=0)
 
     return train_images, train_labels, test_images, test_labels
