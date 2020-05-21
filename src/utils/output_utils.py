@@ -16,7 +16,7 @@ def draw_output_frame(frame, trajectory, equation_str, eq_elem_list=None):
     xinch = xpixels / dpi
     yinch = ypixels / dpi
 
-    fig, ax = plt.subplots(1, 1, figsize=(xinch,yinch))
+    fig, ax = plt.subplots(1, 1, figsize=(xinch,yinch), dpi=dpi)
     canvas = matplotlib.backends.backend_agg.FigureCanvas(fig)
 
     fig.set_facecolor('black')
@@ -60,7 +60,7 @@ def save_video(filename, frame_list, fps):
     """
     Save the list of frame as a video.
     """
-    writer = imageio.get_writer(filename, fps=fps, macro_block_size=16)
+    writer = imageio.get_writer(filename, fps=fps)
     for frame in frame_list:
         writer.append_data(frame)
     writer.close()
