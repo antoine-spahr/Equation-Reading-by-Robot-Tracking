@@ -119,14 +119,14 @@ class Detector:
 
     def classify_digits(self):
         """
-        Classify digits as a majority prediction over 25 random rotation + predict
+        Classify digits as a majority prediction over 100 random rotation + predict
         of the image.
         """
         for elem in self.element_list:
             if elem.type == 'digit':
                 # get 30 rotated samples
                 rotated_input = []
-                for _ in range(50):
+                for _ in range(100):
                     # rotate image
                     alpha = np.random.randint(0,360)
                     img = skimage.transform.rotate(elem.image, alpha, order=1, resize=True)
