@@ -32,8 +32,7 @@ def main(video_path, output_path):
     detector = Detector(frame1, '../models/Digit_model.pickle',
                                '../models/Operators_model.pickle',
                                '../models/KMeans_centers.json')
-    eq_element_list = detector.analyse_frame()
-
+    eq_element_list = detector.analyse_frame(verbose=True)
 
     # initialize equation and output-video
     equation = ''
@@ -43,6 +42,7 @@ def main(video_path, output_path):
     tracker = Tracker()
 
     # iterate over frames
+    print('>>> Equation reading with arrow tracking.')
     is_free = True # state if the arrow has moved to another element (i.e. if there has been an absence of overlap before)
     unsolved = True # whether the equation has been solved or not
     for i, frame in enumerate(video):
@@ -79,9 +79,12 @@ def main(video_path, output_path):
     # check if equation has been solved.
     if unsolved:
         print('>>> WARNING : The equation could not be solved!')
+    else:
+        print('>>> Successfully read and solve the equation.')
 
     # save output-video at output_path
     save_video(output_path, output_frames, fps=video.get_meta_data()['fps']*2)
+    print(f'>>> Output video saved at {output_path}.')
 
 if __name__ == '__main__':
     main()

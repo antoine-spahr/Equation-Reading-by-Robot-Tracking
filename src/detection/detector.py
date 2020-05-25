@@ -35,20 +35,31 @@ class Detector:
         with open(digit_model_path, 'rb') as f:
             self.digit_classifier = pickle.load(f)
 
-    def analyse_frame(self):
+    def analyse_frame(self, verbose=True):
         """
         Analyse the frame to extract equation element and identify them.
         """
+        if verbose: print('>>> Compute binary mask.')
         mask = self.get_mask()
+        if verbose: print('>>> Extract equation element.')
         self.extract_equation_element(mask)
+        if verbose: print(f'>>> {len(self.element_list)} equation elements detected.')
+
         # classify element if they are op or digit
+        if verbose: print('>>> Classify element by type.')
         self.classify_colors()
+        if verbose: print(f'>>> {sum(elem.type == "operator" for elem in self.element_list)} operators detected.')
+        if verbose: print(f'>>> {sum(elem.type == "digit" for elem in self.element_list)} digits detected.')
+
         # keep only digit and operators elements (not arrow)
         self.element_list = [elem for elem in self.element_list if elem.type in ['operator', 'digit']]
         # Classify digit element values
-        self.classify_digits()
+        if verbose: print('>>> Classifying digits.')
+        self.classify_digits(verbose=verbose)
         # Classify operator element values
-        self.classify_operators()
+        if verbose: print('>>> Classifying operators.')
+        self.classify_operators(verbose=verbose)
+        if verbose: print('>>> Finished Analysing the frame.')
 
         return self.element_list
 
@@ -117,12 +128,12 @@ class Detector:
             idx = np.linalg.norm(centers - color, ord=2, axis=1).argmin()
             elem.type = names[idx]
 
-    def classify_digits(self):
+    def classify_digits(self, verbose=True):
         """
         Classify digits as a majority prediction over 100 random rotation + predict
         of the image.
         """
-        for elem in self.element_list:
+        for i, elem in enumerate(self.element_list):
             if elem.type == 'digit':
                 # get 30 rotated samples
                 rotated_input = []
@@ -147,6 +158,7 @@ class Detector:
                 digit_pred = np.bincount(pred_list).argmax()
                 # assign label name
                 elem.value = str(digit_pred.item())
+                if verbose: print(f'>>> Element {i+1} classified as {elem.value}')
 
     def img_as_MNIST(self, img, mask):
         """
@@ -192,12 +204,12 @@ class Detector:
 
         return img
 
-    def classify_operators(self):
+    def classify_operators(self, verbose=True):
         """
         5-NN on fourier descriptors for each element categorized as operators.
         """
         char_table = {'plus': '+', 'minus':'-', 'mult':'*', 'div':'/', 'eq':'='}
-        for elem in self.element_list:
+        for i, elem in enumerate(self.element_list):
             if elem.type == 'operator':
                 # get fourier descriptors
                 feature = elem.get_Fourier_descr(5)
@@ -206,3 +218,4 @@ class Detector:
                 # assign label name
                 op_name = self.operator_labels_name[pred[0]]
                 elem.value = char_table[op_name]
+                if verbose: print(f'>>> Element {i+1} classified as {elem.value}')

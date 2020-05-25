@@ -7,18 +7,19 @@ import numpy as np
 
 class Tracker:
     """
-
+    Tracker object to follow the red arrow on the video.
     """
     def __init__(self):
         """
-
+        Initialize the tracker. Position list contains the list of tracked postion.
+        bbox contains the current bounding box (x0, y0, x1, y1).
         """
         self.position_list = []
         self.bbox = None
 
     def get_arrow_mask(self, frame):
         """
-
+        Detect the arrow on the passed frame.
         """
         #img = skimage.exposure.rescale_intensity(frame, in_range=tuple(np.percentile(frame, (2,98))), out_range=(0,255))
         img = skimage.exposure.equalize_adapthist(frame)
@@ -38,7 +39,7 @@ class Tracker:
 
     def track(self, frame):
         """
-
+        Get Centroid position and bbox of the arrow from the passed frame.
         """
         mask = self.get_arrow_mask(frame)
         label = skimage.measure.label(mask)
