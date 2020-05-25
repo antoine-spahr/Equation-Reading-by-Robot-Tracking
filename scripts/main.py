@@ -53,7 +53,7 @@ def main(video_path, output_path):
         # check if bbox overlap with any digit/operator
         overlap_elem_list = [elem for elem in eq_element_list if elem.has_overlap(arrow_bbox, frac=1.0)]
         # append character to equation string
-        if len(overlap_elem_list) == 1 and is_free:
+        if len(overlap_elem_list) >= 1 and is_free:
             equation += overlap_elem_list[0].value
             is_free = False
 
