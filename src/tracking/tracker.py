@@ -21,15 +21,15 @@ class Tracker:
         """
         Detect the arrow on the passed frame.
         """
-        #img = skimage.exposure.rescale_intensity(frame, in_range=tuple(np.percentile(frame, (2,98))), out_range=(0,255))
+        # Adapte contrast and put in grayscale
         img = skimage.exposure.equalize_adapthist(frame)
         img = skimage.color.rgb2gray(img)
         # # apply Otsu thresholding method
         thres = skimage.filters.threshold_otsu(img)
-        # #mask = skimage.filters.apply_hysteresis_threshold(img, low=0.8*thres, high=1*thres)
         mask = np.where(img < skimage.filters.threshold_otsu(img), True, False)
+        # Morphological cleaning
         mask = skimage.morphology.binary_opening(mask, skimage.morphology.disk(5))
-        #mask = skimage.morphology.binary_closing(mask, skimage.morphology.disk(5))
+        # Remove corners of room
         mask = skimage.segmentation.flood_fill(mask, (0,0), 0)
         mask = skimage.segmentation.flood_fill(mask, (0,mask.shape[1]-1), 0)
         mask = skimage.segmentation.flood_fill(mask, (mask.shape[0]-1,0), 0)
