@@ -21,3 +21,11 @@ The second step is tracking the arrow and _read_ the equation. At each frame we 
 ## Result on training sequence
 
 ![](outputs/output.gif)
+
+## Result on test sequences
+
+### Without element rotation
+![](outputs/simple_test.gif)
+
+### With element rotation
+![](outputs/roated_test.gif)
